@@ -1,36 +1,55 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Цойка
 
-## Getting Started
+Сайт-витрина домашней кондитерской с админ-панелью для добавления десертов и рецептов.
 
-First, run the development server:
+## Быстрый старт
 
 ```bash
+# 1. Установить зависимости (уже выполнено)
+npm install
+
+# 2. Сгенерировать пароль админа и секрет сессии
+npm run set-password -- "мой-пароль-123"
+# → скопируйте три строки в файл .env.local (создайте из .env.local.example)
+
+# 3. (Опционально) Засеять примерами
+npm run seed
+
+# 4. Запустить dev-сервер
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Открыть [http://localhost:3000](http://localhost:3000). Админка — [/admin/login](http://localhost:3000/admin/login).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Структура
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- `app/` — страницы (App Router)
+  - `page.tsx` — главная с сеткой десертов
+  - `catalog/page.tsx` — каталог
+  - `products/[id]/page.tsx` — страница десерта с рецептами
+  - `admin/login/` — вход
+  - `admin/(panel)/` — дашборд, создание и редактирование
+  - `api/admin/` — REST-эндпоинты для CRUD
+- `lib/` — доступ к БД, авторизация, загрузка файлов
+- `components/` — React-компоненты (публичные и `admin/`)
+- `proxy.ts` — защита `/admin/*` и `/api/admin/*` (аналог middleware в Next 16)
+- `data/app.db` — SQLite база (создаётся автоматически, в git не попадает)
+- `public/uploads/` — загруженные фото (в git не попадают)
+- `scripts/` — утилиты: `set-password.ts`, `seed.ts`
 
-## Learn More
+## Переменные окружения (`.env.local`)
 
-To learn more about Next.js, take a look at the following resources:
+```
+ADMIN_USERNAME=admin
+ADMIN_PASSWORD_HASH=<bcrypt-хеш>
+SESSION_SECRET=<минимум 16 символов случайной строки>
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Продакшен
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```bash
+npm run build
+npm run start
+```
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Для продакшена храните `data/app.db` и `public/uploads/` на персистентном томе (не сбрасывайте при деплое).

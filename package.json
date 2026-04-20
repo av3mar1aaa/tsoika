@@ -6,21 +6,30 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "set-password": "tsx scripts/set-password.ts",
+    "seed": "node --env-file=.env.local --import tsx scripts/seed.ts"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1032.0",
+    "@libsql/client": "^0.17.2",
+    "bcryptjs": "^3.0.3",
+    "jose": "^6.2.2",
     "next": "16.2.4",
     "react": "19.2.4",
-    "react-dom": "19.2.4"
+    "react-dom": "19.2.4",
+    "sharp": "^0.34.5"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
+    "@types/bcryptjs": "^2.4.6",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.2.4",
     "tailwindcss": "^4",
+    "tsx": "^4.21.0",
     "typescript": "^5"
   }
 }
