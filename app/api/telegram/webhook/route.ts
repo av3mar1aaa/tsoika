@@ -1,0 +1,182 @@
+import { NextResponse } from "next/server";
+import crypto from "node:crypto";
+import sharp from "sharp";
+import {
+  type TgUpdate,
+  type TgMessage,
+  downloadFile,
+  getFilePath,
+  isAuthorizedChat,
+  parseCaption,
+  pickLargestPhoto,
+  sendMessage,
+} from "@/lib/telegram";
+import { putObject } from "@/lib/storage";
+import {
+  createProductFromTelegram,
+  getProductByTgMediaGroupId,
+  updateProduct,
+} from "@/lib/products";
+import { createMedia } from "@/lib/media";
+import { createRecipe } from "@/lib/recipes";
+
+export const runtime = "nodejs";
+export const maxDuration = 300;
+
+function verifyWebhookSecret(request: Request): boolean {
+  const expected = process.env.TELEGRAM_WEBHOOK_SECRET;
+  if (!expected) return true;
+  const got = request.headers.get("x-telegram-bot-api-secret-token");
+  return got === expected;
+}
+
+export async function POST(request: Request) {
+  if (!verifyWebhookSecret(request)) {
+    return NextResponse.json({ ok: false }, { status: 401 });
+  }
+
+  let update: TgUpdate;
+  try {
+    update = (await request.json()) as TgUpdate;
+  } catch {
+    return NextResponse.json({ ok: true });
+  }
+
+  const message = update.message ?? update.channel_post ?? update.edited_message;
+  if (!message) {
+    return NextResponse.json({ ok: true });
+  }
+
+  if (!isAuthorizedChat(message.chat.id)) {
+    return NextResponse.json({ ok: true });
+  }
+
+  try {
+    await handleMessage(message);
+  } catch (e) {
+    const err = e instanceof Error ? e.message : "Ошибка";
+    console.error("[telegram] handler failed:", err, e);
+    await sendMessage(message.chat.id, `❌ Ошибка: ${err}`);
+  }
+
+  return NextResponse.json({ ok: true });
+}
+
+async function handleMessage(message: TgMessage): Promise<void> {
+  const hasPhoto = Array.isArray(message.photo) && message.photo.length > 0;
+  const hasVideo = !!message.video;
+
+  if (!hasPhoto && !hasVideo) {
+    if (message.text) {
+      await sendMessage(
+        message.chat.id,
+        "Пришлите фото или видео с подписью:\n— первая строка: название\n— через пустую строку: рецепт",
+      );
+    }
+    return;
+  }
+
+  const groupId = message.media_group_id ?? null;
+  const parsed = parseCaption(message.caption);
+
+  let mediaKind: "image" | "video";
+  let publicUrl: string;
+
+  if (hasPhoto) {
+    const photo = pickLargestPhoto(message.photo!);
+    publicUrl = await uploadPhoto(photo.file_id);
+    mediaKind = "image";
+  } else {
+    const video = message.video!;
+    publicUrl = await uploadVideo(video.file_id, video.mime_type);
+    mediaKind = "video";
+  }
+
+  const existing = groupId
+    ? await getProductByTgMediaGroupId(groupId)
+    : null;
+
+  let product = existing;
+
+  if (!product) {
+    const initialName =
+      parsed?.name && parsed.name.length > 0 ? parsed.name : "Без названия";
+    product = await createProductFromTelegram({
+      name: initialName,
+      description: null,
+      image_path: publicUrl,
+      tg_media_group_id: groupId,
+    });
+    if (parsed?.recipe) {
+      await createRecipe({
+        product_id: product.id,
+        title: "Рецепт",
+        ingredients: "",
+        instructions: parsed.recipe,
+      });
+    }
+    await sendMessage(
+      message.chat.id,
+      `✅ Добавлен десерт «${initialName}»`,
+    );
+  } else if (parsed) {
+    await updateProduct(product.id, {
+      name: parsed.name || product.name,
+      description: product.description,
+    });
+    if (parsed.recipe) {
+      await createRecipe({
+        product_id: product.id,
+        title: "Рецепт",
+        ingredients: "",
+        instructions: parsed.recipe,
+      });
+    }
+  }
+
+  await createMedia({
+    product_id: product.id,
+    kind: mediaKind,
+    url: publicUrl,
+  });
+}
+
+async function uploadPhoto(fileId: string): Promise<string> {
+  const filePath = await getFilePath(fileId);
+  const { buffer } = await downloadFile(filePath);
+  const processed = await sharp(buffer)
+    .rotate()
+    .resize({
+      width: 1600,
+      height: 1600,
+      fit: "inside",
+      withoutEnlargement: true,
+    })
+    .webp({ quality: 82 })
+    .toBuffer();
+  const key = `images/${crypto.randomBytes(8).toString("hex")}.webp`;
+  return putObject(key, processed, "image/webp");
+}
+
+async function uploadVideo(
+  fileId: string,
+  mimeType: string | undefined,
+): Promise<string> {
+  const filePath = await getFilePath(fileId);
+  const { buffer, mimeType: contentType } = await downloadFile(filePath);
+  const finalType = mimeType || contentType || "video/mp4";
+  const ext = guessExt(filePath, finalType);
+  const key = `videos/${crypto.randomBytes(8).toString("hex")}.${ext}`;
+  return putObject(key, buffer, finalType);
+}
+
+function guessExt(filePath: string, mime: string): string {
+  const dot = filePath.lastIndexOf(".");
+  if (dot !== -1 && dot < filePath.length - 1) {
+    return filePath.slice(dot + 1).toLowerCase();
+  }
+  if (mime.includes("mp4")) return "mp4";
+  if (mime.includes("webm")) return "webm";
+  if (mime.includes("quicktime")) return "mov";
+  return "mp4";
+}

@@ -36,6 +36,40 @@ export async function getProduct(id: number): Promise<Product | null> {
   return rowToProduct(res.rows[0] as Record<string, unknown>);
 }
 
+export async function getProductByTgMediaGroupId(
+  groupId: string,
+): Promise<Product | null> {
+  await ensureSchema();
+  const res = await db.execute({
+    sql: "SELECT * FROM products WHERE tg_media_group_id = ?",
+    args: [groupId],
+  });
+  if (res.rows.length === 0) return null;
+  return rowToProduct(res.rows[0] as Record<string, unknown>);
+}
+
+export async function createProductFromTelegram(input: {
+  name: string;
+  description: string | null;
+  image_path: string;
+  tg_media_group_id: string | null;
+}): Promise<Product> {
+  await ensureSchema();
+  const now = Date.now();
+  const res = await db.execute({
+    sql: "INSERT INTO products (name, description, image_path, created_at, tg_media_group_id) VALUES (?, ?, ?, ?, ?) RETURNING *",
+    args: [
+      input.name,
+      input.description,
+      input.image_path,
+      now,
+      input.tg_media_group_id,
+    ],
+  });
+  return rowToProduct(res.rows[0] as Record<string, unknown>);
+}
+
+
 export async function createProduct(input: {
   name: string;
   description: string | null;

@@ -97,34 +97,43 @@ export default async function ProductPage({
           </div>
         ) : (
           <div className="space-y-6">
-            {recipes.map((r) => (
-              <div
-                key={r.id}
-                className="rounded-2xl border border-rose-200 bg-white p-6 shadow-sm"
-              >
-                <h3 className="font-display text-xl font-semibold text-rose-800">
-                  {r.title}
-                </h3>
-                <div className="mt-4 grid gap-6 md:grid-cols-[1fr_2fr]">
-                  <div>
-                    <h4 className="mb-2 text-sm font-semibold uppercase tracking-wide text-rose-600">
-                      Ингредиенты
-                    </h4>
-                    <p className="whitespace-pre-line text-sm text-rose-900/80">
-                      {r.ingredients}
-                    </p>
-                  </div>
-                  <div>
-                    <h4 className="mb-2 text-sm font-semibold uppercase tracking-wide text-rose-600">
-                      Приготовление
-                    </h4>
-                    <p className="whitespace-pre-line text-sm text-rose-900/80">
+            {recipes.map((r) => {
+              const hasIngredients = r.ingredients.trim().length > 0;
+              return (
+                <div
+                  key={r.id}
+                  className="rounded-2xl border border-rose-200 bg-white p-6 shadow-sm"
+                >
+                  <h3 className="font-display text-xl font-semibold text-rose-800">
+                    {r.title}
+                  </h3>
+                  {hasIngredients ? (
+                    <div className="mt-4 grid gap-6 md:grid-cols-[1fr_2fr]">
+                      <div>
+                        <h4 className="mb-2 text-sm font-semibold uppercase tracking-wide text-rose-600">
+                          Ингредиенты
+                        </h4>
+                        <p className="whitespace-pre-line text-sm text-rose-900/80">
+                          {r.ingredients}
+                        </p>
+                      </div>
+                      <div>
+                        <h4 className="mb-2 text-sm font-semibold uppercase tracking-wide text-rose-600">
+                          Приготовление
+                        </h4>
+                        <p className="whitespace-pre-line text-sm text-rose-900/80">
+                          {r.instructions}
+                        </p>
+                      </div>
+                    </div>
+                  ) : (
+                    <p className="mt-4 whitespace-pre-line text-sm text-rose-900/80">
                       {r.instructions}
                     </p>
-                  </div>
+                  )}
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </section>

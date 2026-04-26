@@ -15,43 +15,55 @@ const db = createClient({ url, authToken });
 
 let schemaReady: Promise<void> | null = null;
 
+async function migrate(): Promise<void> {
+  await db.executeMultiple(`
+    CREATE TABLE IF NOT EXISTS products (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      description TEXT,
+      image_path TEXT NOT NULL,
+      created_at INTEGER NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS recipes (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      product_id INTEGER NOT NULL REFERENCES products(id) ON DELETE CASCADE,
+      title TEXT NOT NULL,
+      ingredients TEXT NOT NULL,
+      instructions TEXT NOT NULL,
+      created_at INTEGER NOT NULL
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_recipes_product ON recipes(product_id);
+
+    CREATE TABLE IF NOT EXISTS product_media (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      product_id INTEGER NOT NULL REFERENCES products(id) ON DELETE CASCADE,
+      kind TEXT NOT NULL CHECK (kind IN ('image','video')),
+      url TEXT NOT NULL,
+      sort_order INTEGER NOT NULL DEFAULT 0,
+      created_at INTEGER NOT NULL
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_media_product ON product_media(product_id, sort_order);
+  `);
+
+  try {
+    await db.execute(
+      "ALTER TABLE products ADD COLUMN tg_media_group_id TEXT",
+    );
+  } catch {
+    /* column already exists */
+  }
+
+  await db.execute(
+    "CREATE UNIQUE INDEX IF NOT EXISTS idx_products_tg_group ON products(tg_media_group_id) WHERE tg_media_group_id IS NOT NULL",
+  );
+}
+
 export function ensureSchema(): Promise<void> {
   if (!schemaReady) {
-    schemaReady = db
-      .executeMultiple(
-        `
-        CREATE TABLE IF NOT EXISTS products (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
-          name TEXT NOT NULL,
-          description TEXT,
-          image_path TEXT NOT NULL,
-          created_at INTEGER NOT NULL
-        );
-
-        CREATE TABLE IF NOT EXISTS recipes (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
-          product_id INTEGER NOT NULL REFERENCES products(id) ON DELETE CASCADE,
-          title TEXT NOT NULL,
-          ingredients TEXT NOT NULL,
-          instructions TEXT NOT NULL,
-          created_at INTEGER NOT NULL
-        );
-
-        CREATE INDEX IF NOT EXISTS idx_recipes_product ON recipes(product_id);
-
-        CREATE TABLE IF NOT EXISTS product_media (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
-          product_id INTEGER NOT NULL REFERENCES products(id) ON DELETE CASCADE,
-          kind TEXT NOT NULL CHECK (kind IN ('image','video')),
-          url TEXT NOT NULL,
-          sort_order INTEGER NOT NULL DEFAULT 0,
-          created_at INTEGER NOT NULL
-        );
-
-        CREATE INDEX IF NOT EXISTS idx_media_product ON product_media(product_id, sort_order);
-        `,
-      )
-      .then(() => {});
+    schemaReady = migrate();
   }
   return schemaReady;
 }
