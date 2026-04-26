@@ -80,3 +80,31 @@ export async function deleteRecipe(id: number): Promise<void> {
     args: [id],
   });
 }
+
+export async function appendToFirstRecipeOfProduct(
+  productId: number,
+  text: string,
+): Promise<Recipe> {
+  await ensureSchema();
+  const res = await db.execute({
+    sql: "SELECT * FROM recipes WHERE product_id = ? ORDER BY created_at ASC LIMIT 1",
+    args: [productId],
+  });
+  if (res.rows.length === 0) {
+    return createRecipe({
+      product_id: productId,
+      title: "Рецепт",
+      ingredients: "",
+      instructions: text,
+    });
+  }
+  const recipe = rowToRecipe(res.rows[0] as Record<string, unknown>);
+  const merged = recipe.instructions
+    ? `${recipe.instructions}\n${text}`
+    : text;
+  await db.execute({
+    sql: "UPDATE recipes SET instructions = ? WHERE id = ?",
+    args: [merged, recipe.id],
+  });
+  return { ...recipe, instructions: merged };
+}

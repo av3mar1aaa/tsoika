@@ -59,6 +59,14 @@ async function migrate(): Promise<void> {
   await db.execute(
     "CREATE UNIQUE INDEX IF NOT EXISTS idx_products_tg_group ON products(tg_media_group_id) WHERE tg_media_group_id IS NOT NULL",
   );
+
+  await db.execute(`
+    CREATE TABLE IF NOT EXISTS chat_state (
+      chat_id INTEGER PRIMARY KEY,
+      last_product_id INTEGER,
+      updated_at INTEGER NOT NULL
+    )
+  `);
 }
 
 export function ensureSchema(): Promise<void> {

@@ -18,7 +18,11 @@ import {
   updateProduct,
 } from "@/lib/products";
 import { createMedia } from "@/lib/media";
-import { createRecipe } from "@/lib/recipes";
+import { appendToFirstRecipeOfProduct, createRecipe } from "@/lib/recipes";
+import {
+  getLastProductForChat,
+  setLastProductForChat,
+} from "@/lib/chat-state";
 
 export const runtime = "nodejs";
 export const maxDuration = 300;
@@ -68,10 +72,7 @@ async function handleMessage(message: TgMessage): Promise<void> {
 
   if (!hasPhoto && !hasVideo) {
     if (message.text) {
-      await sendMessage(
-        message.chat.id,
-        "Пришлите фото или видео с подписью:\n— первая строка: название\n— через пустую строку: рецепт",
-      );
+      await handleTextContinuation(message);
     }
     return;
   }
@@ -139,6 +140,24 @@ async function handleMessage(message: TgMessage): Promise<void> {
     kind: mediaKind,
     url: publicUrl,
   });
+
+  await setLastProductForChat(message.chat.id, product.id);
+}
+
+async function handleTextContinuation(message: TgMessage): Promise<void> {
+  const text = (message.text ?? "").trim();
+  if (!text) return;
+
+  const lastId = await getLastProductForChat(message.chat.id);
+  if (!lastId) {
+    await sendMessage(
+      message.chat.id,
+      "Сначала пришлите фото или видео с подписью:\n— 1-я строка: название\n— через пустую строку: рецепт",
+    );
+    return;
+  }
+  await appendToFirstRecipeOfProduct(lastId, text);
+  await sendMessage(message.chat.id, "📝 Дополнено к последнему десерту");
 }
 
 async function uploadPhoto(fileId: string): Promise<string> {
