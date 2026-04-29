@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { getProduct } from "@/lib/products";
 import { listRecipesByProduct } from "@/lib/recipes";
 import { listMediaByProduct } from "@/lib/media";
+import OrderButton from "@/components/OrderButton";
 
 export const dynamic = "force-dynamic";
 
@@ -45,6 +46,9 @@ export default async function ProductPage({
               {product.description}
             </p>
           )}
+          <div className="mt-6">
+            <OrderButton productName={product.name} size="lg" />
+          </div>
         </div>
       </article>
 
