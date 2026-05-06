@@ -16,7 +16,7 @@ export default function ProductCard({ product }: { product: Product }) {
             className="object-cover transition-transform duration-500 group-hover:scale-105"
           />
         </div>
-        <div className="px-4 pt-4">
+        <div className="px-4 py-4">
           <h3 className="font-display text-lg text-rose-800">{product.name}</h3>
           {product.description && (
             <p className="mt-1 line-clamp-2 text-sm text-rose-900/70">
@@ -25,9 +25,11 @@ export default function ProductCard({ product }: { product: Product }) {
           )}
         </div>
       </Link>
-      <div className="px-4 pb-4 pt-3">
-        <OrderButton productName={product.name} className="w-full" />
-      </div>
+      {product.show_order_button && (
+        <div className="px-4 pb-4 -mt-2">
+          <OrderButton productName={product.name} className="w-full" />
+        </div>
+      )}
     </div>
   );
 }

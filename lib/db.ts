@@ -56,6 +56,14 @@ async function migrate(): Promise<void> {
     /* column already exists */
   }
 
+  try {
+    await db.execute(
+      "ALTER TABLE products ADD COLUMN show_order_button INTEGER NOT NULL DEFAULT 0",
+    );
+  } catch {
+    /* column already exists */
+  }
+
   await db.execute(
     "CREATE UNIQUE INDEX IF NOT EXISTS idx_products_tg_group ON products(tg_media_group_id) WHERE tg_media_group_id IS NOT NULL",
   );

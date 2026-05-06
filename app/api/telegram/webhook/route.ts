@@ -4,7 +4,10 @@ import sharp from "sharp";
 import {
   type TgUpdate,
   type TgMessage,
+  type TgCallbackQuery,
+  answerCallbackQuery,
   downloadFile,
+  editMessageText,
   getFilePath,
   isAuthorizedChat,
   parseCaption,
@@ -14,7 +17,9 @@ import {
 import { putObject } from "@/lib/storage";
 import {
   createProductFromTelegram,
+  getProduct,
   getProductByTgMediaGroupId,
+  setProductOrderButton,
   updateProduct,
 } from "@/lib/products";
 import { createMedia } from "@/lib/media";
@@ -46,6 +51,15 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: true });
   }
 
+  if (update.callback_query) {
+    try {
+      await handleCallback(update.callback_query);
+    } catch (e) {
+      console.error("[telegram] callback handler failed:", e);
+    }
+    return NextResponse.json({ ok: true });
+  }
+
   const message = update.message ?? update.channel_post ?? update.edited_message;
   if (!message) {
     return NextResponse.json({ ok: true });
@@ -64,6 +78,41 @@ export async function POST(request: Request) {
   }
 
   return NextResponse.json({ ok: true });
+}
+
+async function handleCallback(cb: TgCallbackQuery): Promise<void> {
+  const fromId = cb.from.id;
+  if (!isAuthorizedChat(fromId)) {
+    await answerCallbackQuery(cb.id);
+    return;
+  }
+  const data = cb.data ?? "";
+  const match = /^order:([01]):(\d+)$/.exec(data);
+  if (!match) {
+    await answerCallbackQuery(cb.id);
+    return;
+  }
+  const show = match[1] === "1";
+  const productId = Number(match[2]);
+  const product = await getProduct(productId);
+  if (!product) {
+    await answerCallbackQuery(cb.id, "Десерт не найден");
+    return;
+  }
+  await setProductOrderButton(productId, show);
+  await answerCallbackQuery(
+    cb.id,
+    show ? "Кнопка добавлена" : "Без кнопки",
+  );
+  if (cb.message) {
+    await editMessageText(
+      cb.message.chat.id,
+      cb.message.message_id,
+      show
+        ? `✅ К «${product.name}» добавлена кнопка «Заказать»`
+        : `✅ «${product.name}» опубликован без кнопки «Заказать»`,
+    );
+  }
 }
 
 async function handleMessage(message: TgMessage): Promise<void> {
@@ -118,7 +167,15 @@ async function handleMessage(message: TgMessage): Promise<void> {
     }
     await sendMessage(
       message.chat.id,
-      `✅ Добавлен десерт «${initialName}»`,
+      `Добавить под «${initialName}» кнопку «Заказать»?`,
+      {
+        inline_keyboard: [
+          [
+            { text: "✅ Да", callback_data: `order:1:${product.id}` },
+            { text: "🚫 Нет", callback_data: `order:0:${product.id}` },
+          ],
+        ],
+      },
     );
   } else if (parsed) {
     await updateProduct(product.id, {

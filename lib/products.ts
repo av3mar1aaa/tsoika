@@ -6,6 +6,7 @@ export type Product = {
   description: string | null;
   image_path: string;
   created_at: number;
+  show_order_button: boolean;
 };
 
 function rowToProduct(row: Record<string, unknown>): Product {
@@ -15,7 +16,19 @@ function rowToProduct(row: Record<string, unknown>): Product {
     description: row.description == null ? null : String(row.description),
     image_path: String(row.image_path),
     created_at: Number(row.created_at),
+    show_order_button: Number(row.show_order_button ?? 0) === 1,
   };
+}
+
+export async function setProductOrderButton(
+  id: number,
+  show: boolean,
+): Promise<void> {
+  await ensureSchema();
+  await db.execute({
+    sql: "UPDATE products SET show_order_button = ? WHERE id = ?",
+    args: [show ? 1 : 0, id],
+  });
 }
 
 export async function listProducts(): Promise<Product[]> {

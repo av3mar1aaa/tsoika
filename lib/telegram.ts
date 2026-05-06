@@ -30,11 +30,28 @@ export type TgMessage = {
   video?: TgVideo;
 };
 
+export type TgInlineKeyboardButton = {
+  text: string;
+  callback_data: string;
+};
+
+export type TgInlineKeyboardMarkup = {
+  inline_keyboard: TgInlineKeyboardButton[][];
+};
+
+export type TgCallbackQuery = {
+  id: string;
+  from: { id: number };
+  message?: TgMessage;
+  data?: string;
+};
+
 export type TgUpdate = {
   update_id: number;
   message?: TgMessage;
   channel_post?: TgMessage;
   edited_message?: TgMessage;
+  callback_query?: TgCallbackQuery;
 };
 
 export function isAuthorizedChat(chatId: number): boolean {
@@ -55,12 +72,46 @@ function botToken(): string {
 export async function sendMessage(
   chatId: number,
   text: string,
+  replyMarkup?: TgInlineKeyboardMarkup,
 ): Promise<void> {
   const token = botToken();
   await fetch(`${API_BASE}/bot${token}/sendMessage`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ chat_id: chatId, text }),
+    body: JSON.stringify({
+      chat_id: chatId,
+      text,
+      reply_markup: replyMarkup,
+    }),
+  }).catch(() => {});
+}
+
+export async function answerCallbackQuery(
+  callbackQueryId: string,
+  text?: string,
+): Promise<void> {
+  const token = botToken();
+  await fetch(`${API_BASE}/bot${token}/answerCallbackQuery`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ callback_query_id: callbackQueryId, text }),
+  }).catch(() => {});
+}
+
+export async function editMessageText(
+  chatId: number,
+  messageId: number,
+  text: string,
+): Promise<void> {
+  const token = botToken();
+  await fetch(`${API_BASE}/bot${token}/editMessageText`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      chat_id: chatId,
+      message_id: messageId,
+      text,
+    }),
   }).catch(() => {});
 }
 
