@@ -63,15 +63,14 @@ export default async function ProductPage({
   return (
     <div className="mx-auto max-w-4xl px-6 py-12">
       <article className="overflow-hidden rounded-2xl border border-rose-200 bg-white shadow-sm">
-        <div className="relative w-full bg-rose-100">
+        <div className="relative h-80 w-full bg-rose-100 sm:h-[480px]">
           <Image
             src={product.image_path}
             alt={product.name}
-            width={product.image_width ?? 1600}
-            height={product.image_height ?? 1600}
+            fill
             sizes="(max-width: 1024px) 100vw, 900px"
             priority
-            className="block h-auto w-full object-contain"
+            className="object-contain"
           />
         </div>
         <div className="p-8">
