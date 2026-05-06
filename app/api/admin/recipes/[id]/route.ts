@@ -24,23 +24,22 @@ export async function PUT(
   }
 
   const { title, ingredients, instructions } = body;
-  if (
-    typeof title !== "string" ||
-    !title.trim() ||
-    typeof ingredients !== "string" ||
-    !ingredients.trim() ||
-    typeof instructions !== "string" ||
-    !instructions.trim()
-  ) {
+  if (typeof title !== "string" || !title.trim()) {
     return NextResponse.json(
-      { error: "Заполните все поля рецепта" },
+      { error: "Укажите название рецепта" },
+      { status: 400 },
+    );
+  }
+  if (typeof instructions !== "string" || !instructions.trim()) {
+    return NextResponse.json(
+      { error: "Заполните текст рецепта" },
       { status: 400 },
     );
   }
 
   await updateRecipe(id, {
     title: title.trim(),
-    ingredients: ingredients.trim(),
+    ingredients: typeof ingredients === "string" ? ingredients.trim() : "",
     instructions: instructions.trim(),
   });
   return NextResponse.json({ ok: true });

@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import type { Recipe } from "@/lib/recipes";
+import MarkdownTextarea from "./MarkdownTextarea";
 
 type Props = {
   productId: number;
@@ -241,7 +242,7 @@ function RecipeFields({
   ) => void;
 }) {
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
       <label className="block">
         <span className="mb-1 block text-xs font-semibold uppercase text-rose-600">
           Название рецепта
@@ -254,32 +255,30 @@ function RecipeFields({
           className="w-full rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 outline-none focus:border-rose-400"
         />
       </label>
-      <div className="grid gap-3 md:grid-cols-2">
-        <label className="block">
-          <span className="mb-1 block text-xs font-semibold uppercase text-rose-600">
-            Ингредиенты
-          </span>
-          <textarea
-            required
-            value={ingredients}
-            onChange={(e) => onChange("ingredients", e.target.value)}
-            rows={6}
-            placeholder="по строке на ингредиент"
-            className="w-full rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 outline-none focus:border-rose-400"
-          />
-        </label>
-        <label className="block">
-          <span className="mb-1 block text-xs font-semibold uppercase text-rose-600">
-            Приготовление
-          </span>
-          <textarea
-            required
-            value={instructions}
-            onChange={(e) => onChange("instructions", e.target.value)}
-            rows={6}
-            className="w-full rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 outline-none focus:border-rose-400"
-          />
-        </label>
+      <div>
+        <span className="mb-1 block text-xs font-semibold uppercase text-rose-600">
+          Ингредиенты (необязательно)
+        </span>
+        <MarkdownTextarea
+          value={ingredients}
+          onChange={(v) => onChange("ingredients", v)}
+          rows={5}
+          placeholder="по строке на ингредиент — можно оставить пустым"
+        />
+      </div>
+      <div>
+        <span className="mb-1 block text-xs font-semibold uppercase text-rose-600">
+          Текст рецепта
+        </span>
+        <MarkdownTextarea
+          value={instructions}
+          onChange={(v) => onChange("instructions", v)}
+          rows={10}
+          required
+        />
+        <p className="mt-1 text-xs text-rose-800/60">
+          Поддерживается форматирование: **жирный**, _курсив_, # заголовки, - списки.
+        </p>
       </div>
     </div>
   );
