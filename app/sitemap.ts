@@ -2,7 +2,7 @@ import type { MetadataRoute } from "next";
 import { listProducts } from "@/lib/products";
 
 const SITE_URL =
-  process.env.NEXT_PUBLIC_SITE_URL ?? "https://tranquil-wisp-595864.netlify.app";
+  process.env.NEXT_PUBLIC_SITE_URL ?? "https://tsoika.netlify.app";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const products = await listProducts();

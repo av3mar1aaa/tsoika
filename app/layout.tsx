@@ -16,7 +16,7 @@ const playfair = Playfair_Display({
 });
 
 const SITE_URL =
-  process.env.NEXT_PUBLIC_SITE_URL ?? "https://tranquil-wisp-595864.netlify.app";
+  process.env.NEXT_PUBLIC_SITE_URL ?? "https://tsoika.netlify.app";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
