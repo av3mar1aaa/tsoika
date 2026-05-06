@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import type { Recipe } from "@/lib/recipes";
-import MarkdownTextarea from "./MarkdownTextarea";
+import RichTextEditor from "./RichTextEditor";
 
 type Props = {
   productId: number;
@@ -259,10 +259,10 @@ function RecipeFields({
         <span className="mb-1 block text-xs font-semibold uppercase text-rose-600">
           Ингредиенты (необязательно)
         </span>
-        <MarkdownTextarea
+        <RichTextEditor
           value={ingredients}
           onChange={(v) => onChange("ingredients", v)}
-          rows={5}
+          minRows={4}
           placeholder="по строке на ингредиент — можно оставить пустым"
         />
       </div>
@@ -270,14 +270,14 @@ function RecipeFields({
         <span className="mb-1 block text-xs font-semibold uppercase text-rose-600">
           Текст рецепта
         </span>
-        <MarkdownTextarea
+        <RichTextEditor
           value={instructions}
           onChange={(v) => onChange("instructions", v)}
-          rows={10}
-          required
+          minRows={8}
         />
         <p className="mt-1 text-xs text-rose-800/60">
-          Поддерживается форматирование: **жирный**, _курсив_, # заголовки, - списки.
+          Выделите текст и нажмите B / I / H1-H3 / список — форматирование
+          применится сразу.
         </p>
       </div>
     </div>

@@ -6,7 +6,7 @@ import { listRecipesByProduct } from "@/lib/recipes";
 import { listMediaByProduct } from "@/lib/media";
 import OrderButton from "@/components/OrderButton";
 import ProductGallery from "@/components/ProductGallery";
-import Markdown from "@/components/Markdown";
+import RichText from "@/components/RichText";
 
 export async function generateMetadata({
   params,
@@ -123,22 +123,22 @@ export default async function ProductPage({
                   </h3>
                   {hasIngredients ? (
                     <div className="mt-4 grid gap-6 md:grid-cols-[1fr_2fr]">
-                      <div className="text-sm text-rose-900/80">
+                      <div>
                         <h4 className="mb-2 text-sm font-semibold uppercase tracking-wide text-rose-600">
                           Ингредиенты
                         </h4>
-                        <Markdown>{r.ingredients}</Markdown>
+                        <RichText html={r.ingredients} />
                       </div>
-                      <div className="text-sm text-rose-900/80">
+                      <div>
                         <h4 className="mb-2 text-sm font-semibold uppercase tracking-wide text-rose-600">
                           Приготовление
                         </h4>
-                        <Markdown>{r.instructions}</Markdown>
+                        <RichText html={r.instructions} />
                       </div>
                     </div>
                   ) : (
-                    <div className="mt-4 text-rose-900/80">
-                      <Markdown>{r.instructions}</Markdown>
+                    <div className="mt-4">
+                      <RichText html={r.instructions} />
                     </div>
                   )}
                 </div>
