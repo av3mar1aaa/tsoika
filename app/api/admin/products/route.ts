@@ -1,6 +1,11 @@
 import { NextResponse } from "next/server";
-import { createProduct, setProductOrderButton } from "@/lib/products";
+import {
+  createProduct,
+  setProductCategory,
+  setProductOrderButton,
+} from "@/lib/products";
 import { uploadImage } from "@/lib/upload";
+import { isValidCategory } from "@/lib/categories";
 
 export async function POST(request: Request) {
   const form = await request.formData();
@@ -36,6 +41,14 @@ export async function POST(request: Request) {
     const showOrderRaw = form.get("show_order_button");
     if (showOrderRaw === "1") {
       await setProductOrderButton(product.id, true);
+    }
+    const categoryRaw = form.get("category");
+    if (typeof categoryRaw === "string") {
+      const category = categoryRaw.trim();
+      await setProductCategory(
+        product.id,
+        category === "" || !isValidCategory(category) ? null : category,
+      );
     }
     return NextResponse.json({ product });
   } catch (e) {

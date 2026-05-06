@@ -2,9 +2,11 @@ import { NextResponse } from "next/server";
 import {
   deleteProduct,
   getProduct,
+  setProductCategory,
   setProductOrderButton,
   updateProduct,
 } from "@/lib/products";
+import { isValidCategory } from "@/lib/categories";
 import { listMediaByProduct } from "@/lib/media";
 import { deleteUpload, uploadImage } from "@/lib/upload";
 
@@ -61,6 +63,15 @@ export async function PUT(
   const showOrderRaw = form.get("show_order_button");
   if (typeof showOrderRaw === "string") {
     await setProductOrderButton(id, showOrderRaw === "1");
+  }
+
+  const categoryRaw = form.get("category");
+  if (typeof categoryRaw === "string") {
+    const trimmed = categoryRaw.trim();
+    await setProductCategory(
+      id,
+      trimmed === "" || !isValidCategory(trimmed) ? null : trimmed,
+    );
   }
 
   if (newImage && existing.image_path !== newImage.url) {

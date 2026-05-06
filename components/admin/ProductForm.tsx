@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { CATEGORIES } from "@/lib/categories";
 
 type Props = {
   mode: "create" | "edit";
@@ -12,6 +13,7 @@ type Props = {
     description: string | null;
     image_path: string;
     show_order_button: boolean;
+    category: string | null;
   };
 };
 
@@ -22,6 +24,7 @@ export default function ProductForm({ mode, initial }: Props) {
   const [showOrderButton, setShowOrderButton] = useState(
     initial?.show_order_button ?? false,
   );
+  const [category, setCategory] = useState<string>(initial?.category ?? "");
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(
     initial?.image_path ?? null,
@@ -49,6 +52,7 @@ export default function ProductForm({ mode, initial }: Props) {
     form.set("name", name);
     form.set("description", description);
     form.set("show_order_button", showOrderButton ? "1" : "0");
+    form.set("category", category);
     if (file) form.set("image", file);
 
     setLoading(true);
@@ -131,6 +135,24 @@ export default function ProductForm({ mode, initial }: Props) {
               rows={4}
               className="w-full rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 outline-none focus:border-rose-400"
             />
+          </label>
+
+          <label className="block">
+            <span className="mb-1 block text-sm text-rose-800">
+              Категория
+            </span>
+            <select
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
+              className="w-full rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 outline-none focus:border-rose-400"
+            >
+              <option value="">Без категории</option>
+              {CATEGORIES.map((c) => (
+                <option key={c} value={c}>
+                  {c}
+                </option>
+              ))}
+            </select>
           </label>
 
           <label className="flex cursor-pointer items-center gap-2 select-none">
