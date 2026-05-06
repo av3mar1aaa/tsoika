@@ -42,33 +42,26 @@ export default function PhotoStrip({ products }: { products: Product[] }) {
         className="scrollbar-none flex snap-x gap-4 overflow-x-auto px-6 pb-4 sm:gap-5"
         style={{ scrollbarWidth: "none" }}
       >
-        {products.map((p) => {
-          const w = p.image_width ?? 1;
-          const h = p.image_height ?? 1;
-          return (
-            <Link
-              key={p.id}
-              href={`/products/${p.id}`}
-              className="group relative h-56 flex-shrink-0 snap-start overflow-hidden rounded-2xl border border-rose-200 bg-rose-100 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md sm:h-72"
-              style={{
-                aspectRatio: `${w} / ${h}`,
-              }}
-            >
-              <Image
-                src={p.image_path}
-                alt={p.name}
-                fill
-                sizes="(max-width: 640px) 60vw, 320px"
-                className="object-cover transition-transform duration-500 group-hover:scale-[1.04]"
-              />
-              <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 to-transparent p-3">
-                <span className="block truncate text-sm font-medium text-white drop-shadow-sm">
-                  {p.name}
-                </span>
-              </div>
-            </Link>
-          );
-        })}
+        {products.map((p) => (
+          <Link
+            key={p.id}
+            href={`/products/${p.id}`}
+            className="group relative aspect-[3/4] h-56 flex-shrink-0 snap-start overflow-hidden rounded-2xl border border-rose-200 bg-rose-100 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md sm:h-72"
+          >
+            <Image
+              src={p.image_path}
+              alt={p.name}
+              fill
+              sizes="(max-width: 640px) 50vw, 280px"
+              className="object-cover transition-transform duration-500 group-hover:scale-[1.04]"
+            />
+            <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 to-transparent p-3">
+              <span className="block truncate text-sm font-medium text-white drop-shadow-sm">
+                {p.name}
+              </span>
+            </div>
+          </Link>
+        ))}
       </div>
 
       <button

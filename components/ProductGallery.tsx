@@ -56,7 +56,7 @@ export default function ProductGallery({ media }: { media: ProductMedia[] }) {
                 alt=""
                 fill
                 sizes="(max-width: 640px) 50vw, 33vw"
-                className="object-cover transition-transform duration-500 group-hover:scale-105"
+                className="object-contain transition-transform duration-500 group-hover:scale-105"
               />
             ) : (
               <>
@@ -65,7 +65,7 @@ export default function ProductGallery({ media }: { media: ProductMedia[] }) {
                   muted
                   playsInline
                   preload="metadata"
-                  className="absolute inset-0 h-full w-full object-cover"
+                  className="absolute inset-0 h-full w-full object-contain"
                 />
                 <span className="absolute inset-0 flex items-center justify-center">
                   <span className="rounded-full bg-black/50 p-3">
