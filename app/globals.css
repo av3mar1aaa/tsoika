@@ -37,3 +37,7 @@ h4 {
   background: var(--color-rose-200);
   color: var(--color-rose-900);
 }
+
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}

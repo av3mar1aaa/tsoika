@@ -23,6 +23,12 @@ export default function AdminPanelLayout({
             + Новый десерт
           </Link>
           <Link
+            href="/admin/gallery"
+            className="text-sm text-rose-800 hover:text-rose-600"
+          >
+            Лента
+          </Link>
+          <Link
             href="/"
             className="text-sm text-rose-800/70 hover:text-rose-600"
           >

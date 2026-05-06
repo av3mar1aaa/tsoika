@@ -87,6 +87,17 @@ async function migrate(): Promise<void> {
       updated_at INTEGER NOT NULL
     )
   `);
+
+  await db.executeMultiple(`
+    CREATE TABLE IF NOT EXISTS gallery_photos (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      url TEXT NOT NULL,
+      sort_order INTEGER NOT NULL DEFAULT 0,
+      created_at INTEGER NOT NULL
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_gallery_sort ON gallery_photos(sort_order, id);
+  `);
 }
 
 export function ensureSchema(): Promise<void> {
