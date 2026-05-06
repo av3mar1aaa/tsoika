@@ -37,10 +37,10 @@ export async function PUT(
     );
   }
 
-  let newImageUrl: string | undefined;
+  let newImage: { url: string; width: number; height: number } | undefined;
   if (image instanceof File && image.size > 0) {
     try {
-      newImageUrl = await uploadImage(image);
+      newImage = await uploadImage(image);
     } catch (e) {
       const message = e instanceof Error ? e.message : "Ошибка загрузки";
       return NextResponse.json({ error: message }, { status: 500 });
@@ -53,7 +53,9 @@ export async function PUT(
       typeof description === "string" && description.trim()
         ? description.trim()
         : null,
-    image_path: newImageUrl,
+    image_path: newImage?.url,
+    image_width: newImage?.width,
+    image_height: newImage?.height,
   });
 
   const showOrderRaw = form.get("show_order_button");
@@ -61,7 +63,7 @@ export async function PUT(
     await setProductOrderButton(id, showOrderRaw === "1");
   }
 
-  if (newImageUrl && existing.image_path !== newImageUrl) {
+  if (newImage && existing.image_path !== newImage.url) {
     await deleteUpload(existing.image_path);
   }
 

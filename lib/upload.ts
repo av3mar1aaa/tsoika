@@ -20,12 +20,18 @@ const MAX_VIDEO_BYTES = 100 * 1024 * 1024;
 
 export type MediaKind = "image" | "video";
 
-export async function uploadImage(file: File): Promise<string> {
+export type UploadedImage = {
+  url: string;
+  width: number;
+  height: number;
+};
+
+export async function uploadImage(file: File): Promise<UploadedImage> {
   if (!file.type.startsWith("image/")) {
     throw new Error("Файл должен быть изображением");
   }
   const buffer = Buffer.from(await file.arrayBuffer());
-  const processed = await sharp(buffer)
+  const { data, info } = await sharp(buffer)
     .rotate()
     .resize({
       width: 1600,
@@ -34,10 +40,30 @@ export async function uploadImage(file: File): Promise<string> {
       withoutEnlargement: true,
     })
     .webp({ quality: 82 })
-    .toBuffer();
+    .toBuffer({ resolveWithObject: true });
 
   const key = `images/${crypto.randomBytes(8).toString("hex")}.webp`;
-  return putObject(key, processed, "image/webp");
+  const url = await putObject(key, data, "image/webp");
+  return { url, width: info.width, height: info.height };
+}
+
+export async function uploadImageFromBuffer(
+  buffer: Buffer,
+): Promise<UploadedImage> {
+  const { data, info } = await sharp(buffer)
+    .rotate()
+    .resize({
+      width: 1600,
+      height: 1600,
+      fit: "inside",
+      withoutEnlargement: true,
+    })
+    .webp({ quality: 82 })
+    .toBuffer({ resolveWithObject: true });
+
+  const key = `images/${crypto.randomBytes(8).toString("hex")}.webp`;
+  const url = await putObject(key, data, "image/webp");
+  return { url, width: info.width, height: info.height };
 }
 
 export async function uploadVideo(file: File): Promise<string> {

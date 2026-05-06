@@ -75,6 +75,16 @@ async function migrate(): Promise<void> {
     "show_order_button",
     "ALTER TABLE products ADD COLUMN show_order_button INTEGER NOT NULL DEFAULT 0",
   );
+  await addColumnIfMissing(
+    "products",
+    "image_width",
+    "ALTER TABLE products ADD COLUMN image_width INTEGER",
+  );
+  await addColumnIfMissing(
+    "products",
+    "image_height",
+    "ALTER TABLE products ADD COLUMN image_height INTEGER",
+  );
 
   await db.execute(
     "CREATE UNIQUE INDEX IF NOT EXISTS idx_products_tg_group ON products(tg_media_group_id) WHERE tg_media_group_id IS NOT NULL",

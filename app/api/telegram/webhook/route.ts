@@ -136,10 +136,15 @@ async function handleMessage(message: TgMessage): Promise<void> {
 
   let mediaKind: "image" | "video";
   let publicUrl: string;
+  let imageWidth: number | null = null;
+  let imageHeight: number | null = null;
 
   if (hasPhoto) {
     const photo = pickLargestPhoto(message.photo!);
-    publicUrl = await uploadPhoto(photo.file_id);
+    const uploaded = await uploadPhoto(photo.file_id);
+    publicUrl = uploaded.url;
+    imageWidth = uploaded.width;
+    imageHeight = uploaded.height;
     mediaKind = "image";
   } else {
     const video = message.video!;
@@ -160,6 +165,8 @@ async function handleMessage(message: TgMessage): Promise<void> {
       name: initialName,
       description: null,
       image_path: publicUrl,
+      image_width: imageWidth,
+      image_height: imageHeight,
       tg_media_group_id: groupId,
     });
     product = result.product;
@@ -225,10 +232,12 @@ async function handleTextContinuation(message: TgMessage): Promise<void> {
   await sendMessage(message.chat.id, "📝 Дополнено к последнему десерту");
 }
 
-async function uploadPhoto(fileId: string): Promise<string> {
+async function uploadPhoto(
+  fileId: string,
+): Promise<{ url: string; width: number; height: number }> {
   const filePath = await getFilePath(fileId);
   const { buffer } = await downloadFile(filePath);
-  const processed = await sharp(buffer)
+  const { data, info } = await sharp(buffer)
     .rotate()
     .resize({
       width: 1600,
@@ -237,9 +246,10 @@ async function uploadPhoto(fileId: string): Promise<string> {
       withoutEnlargement: true,
     })
     .webp({ quality: 82 })
-    .toBuffer();
+    .toBuffer({ resolveWithObject: true });
   const key = `images/${crypto.randomBytes(8).toString("hex")}.webp`;
-  return putObject(key, processed, "image/webp");
+  const url = await putObject(key, data, "image/webp");
+  return { url, width: info.width, height: info.height };
 }
 
 async function uploadVideo(

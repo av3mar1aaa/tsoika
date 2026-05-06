@@ -30,7 +30,8 @@ export async function POST(
     let url: string;
     if (file.type.startsWith("image/")) {
       kind = "image";
-      url = await uploadImage(file);
+      const uploaded = await uploadImage(file);
+      url = uploaded.url;
     } else if (file.type.startsWith("video/")) {
       kind = "video";
       url = await uploadVideo(file);

@@ -22,14 +22,16 @@ export async function POST(request: Request) {
   }
 
   try {
-    const imageUrl = await uploadImage(image);
+    const uploaded = await uploadImage(image);
     const product = await createProduct({
       name: name.trim(),
       description:
         typeof description === "string" && description.trim()
           ? description.trim()
           : null,
-      image_path: imageUrl,
+      image_path: uploaded.url,
+      image_width: uploaded.width,
+      image_height: uploaded.height,
     });
     const showOrderRaw = form.get("show_order_button");
     if (showOrderRaw === "1") {

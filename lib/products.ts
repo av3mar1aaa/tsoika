@@ -5,6 +5,8 @@ export type Product = {
   name: string;
   description: string | null;
   image_path: string;
+  image_width: number | null;
+  image_height: number | null;
   created_at: number;
   show_order_button: boolean;
 };
@@ -15,6 +17,8 @@ function rowToProduct(row: Record<string, unknown>): Product {
     name: String(row.name),
     description: row.description == null ? null : String(row.description),
     image_path: String(row.image_path),
+    image_width: row.image_width == null ? null : Number(row.image_width),
+    image_height: row.image_height == null ? null : Number(row.image_height),
     created_at: Number(row.created_at),
     show_order_button: Number(row.show_order_button ?? 0) === 1,
   };
@@ -77,17 +81,21 @@ export async function createProductFromTelegram(input: {
   name: string;
   description: string | null;
   image_path: string;
+  image_width: number | null;
+  image_height: number | null;
   tg_media_group_id: string | null;
 }): Promise<{ product: Product; created: boolean }> {
   await ensureSchema();
   const now = Date.now();
   try {
     const res = await db.execute({
-      sql: "INSERT INTO products (name, description, image_path, created_at, tg_media_group_id) VALUES (?, ?, ?, ?, ?) RETURNING *",
+      sql: "INSERT INTO products (name, description, image_path, image_width, image_height, created_at, tg_media_group_id) VALUES (?, ?, ?, ?, ?, ?, ?) RETURNING *",
       args: [
         input.name,
         input.description,
         input.image_path,
+        input.image_width,
+        input.image_height,
         now,
         input.tg_media_group_id,
       ],
@@ -112,12 +120,21 @@ export async function createProduct(input: {
   name: string;
   description: string | null;
   image_path: string;
+  image_width?: number | null;
+  image_height?: number | null;
 }): Promise<Product> {
   await ensureSchema();
   const now = Date.now();
   const res = await db.execute({
-    sql: "INSERT INTO products (name, description, image_path, created_at) VALUES (?, ?, ?, ?) RETURNING *",
-    args: [input.name, input.description, input.image_path, now],
+    sql: "INSERT INTO products (name, description, image_path, image_width, image_height, created_at) VALUES (?, ?, ?, ?, ?, ?) RETURNING *",
+    args: [
+      input.name,
+      input.description,
+      input.image_path,
+      input.image_width ?? null,
+      input.image_height ?? null,
+      now,
+    ],
   });
   return rowToProduct(res.rows[0] as Record<string, unknown>);
 }
@@ -128,13 +145,22 @@ export async function updateProduct(
     name: string;
     description: string | null;
     image_path?: string;
+    image_width?: number | null;
+    image_height?: number | null;
   },
 ): Promise<void> {
   await ensureSchema();
   if (input.image_path) {
     await db.execute({
-      sql: "UPDATE products SET name = ?, description = ?, image_path = ? WHERE id = ?",
-      args: [input.name, input.description, input.image_path, id],
+      sql: "UPDATE products SET name = ?, description = ?, image_path = ?, image_width = ?, image_height = ? WHERE id = ?",
+      args: [
+        input.name,
+        input.description,
+        input.image_path,
+        input.image_width ?? null,
+        input.image_height ?? null,
+        id,
+      ],
     });
   } else {
     await db.execute({

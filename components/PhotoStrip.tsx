@@ -2,9 +2,10 @@
 
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
-import type { GalleryPhoto } from "@/lib/gallery";
+import Link from "next/link";
+import type { Product } from "@/lib/products";
 
-export default function PhotoStrip({ photos }: { photos: GalleryPhoto[] }) {
+export default function PhotoStrip({ products }: { products: Product[] }) {
   const ref = useRef<HTMLDivElement>(null);
   const [canPrev, setCanPrev] = useState(false);
   const [canNext, setCanNext] = useState(false);
@@ -23,7 +24,7 @@ export default function PhotoStrip({ photos }: { photos: GalleryPhoto[] }) {
       el.removeEventListener("scroll", update);
       window.removeEventListener("resize", update);
     };
-  }, [photos.length]);
+  }, [products.length]);
 
   function scrollBy(direction: 1 | -1) {
     const el = ref.current;
@@ -32,29 +33,42 @@ export default function PhotoStrip({ photos }: { photos: GalleryPhoto[] }) {
     el.scrollBy({ left: delta, behavior: "smooth" });
   }
 
-  if (photos.length === 0) return null;
+  if (products.length === 0) return null;
 
   return (
     <div className="relative">
       <div
         ref={ref}
-        className="scrollbar-none flex snap-x snap-mandatory gap-4 overflow-x-auto px-6 pb-4 sm:gap-5"
+        className="scrollbar-none flex snap-x gap-4 overflow-x-auto px-6 pb-4 sm:gap-5"
         style={{ scrollbarWidth: "none" }}
       >
-        {photos.map((p) => (
-          <div
-            key={p.id}
-            className="relative aspect-[3/4] w-48 flex-shrink-0 snap-start overflow-hidden rounded-2xl border border-rose-200 bg-rose-100 shadow-sm sm:w-60"
-          >
-            <Image
-              src={p.url}
-              alt=""
-              fill
-              sizes="(max-width: 640px) 192px, 240px"
-              className="object-cover"
-            />
-          </div>
-        ))}
+        {products.map((p) => {
+          const w = p.image_width ?? 1;
+          const h = p.image_height ?? 1;
+          return (
+            <Link
+              key={p.id}
+              href={`/products/${p.id}`}
+              className="group relative h-56 flex-shrink-0 snap-start overflow-hidden rounded-2xl border border-rose-200 bg-rose-100 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md sm:h-72"
+              style={{
+                aspectRatio: `${w} / ${h}`,
+              }}
+            >
+              <Image
+                src={p.image_path}
+                alt={p.name}
+                fill
+                sizes="(max-width: 640px) 60vw, 320px"
+                className="object-cover transition-transform duration-500 group-hover:scale-[1.04]"
+              />
+              <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 to-transparent p-3">
+                <span className="block truncate text-sm font-medium text-white drop-shadow-sm">
+                  {p.name}
+                </span>
+              </div>
+            </Link>
+          );
+        })}
       </div>
 
       <button
