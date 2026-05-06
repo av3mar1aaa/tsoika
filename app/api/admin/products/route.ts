@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { createProduct } from "@/lib/products";
+import { createProduct, setProductOrderButton } from "@/lib/products";
 import { uploadImage } from "@/lib/upload";
 
 export async function POST(request: Request) {
@@ -31,6 +31,10 @@ export async function POST(request: Request) {
           : null,
       image_path: imageUrl,
     });
+    const showOrderRaw = form.get("show_order_button");
+    if (showOrderRaw === "1") {
+      await setProductOrderButton(product.id, true);
+    }
     return NextResponse.json({ product });
   } catch (e) {
     const message = e instanceof Error ? e.message : "Ошибка загрузки";

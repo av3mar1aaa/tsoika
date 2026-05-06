@@ -15,9 +15,31 @@ const playfair = Playfair_Display({
   weight: ["500", "600", "700"],
 });
 
+const SITE_URL =
+  process.env.NEXT_PUBLIC_SITE_URL ?? "https://tranquil-wisp-595864.netlify.app";
+
 export const metadata: Metadata = {
-  title: "Цойка — домашняя кондитерская",
-  description: "Авторские десерты и рецепты",
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: "Tsoika — кулинарное волшебство",
+    template: "%s — Tsoika",
+  },
+  description:
+    "Авторские торты, макарон, эклеры и пирожные на заказ. Нежные десерты ручной работы.",
+  openGraph: {
+    type: "website",
+    siteName: "Tsoika",
+    title: "Tsoika — кулинарное волшебство",
+    description:
+      "Авторские торты, макарон, эклеры и пирожные на заказ. Нежные десерты ручной работы.",
+    images: [{ url: "/hero.png" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Tsoika — кулинарное волшебство",
+    description: "Авторские торты, макарон, эклеры и пирожные на заказ.",
+    images: ["/hero.png"],
+  },
 };
 
 export default function RootLayout({

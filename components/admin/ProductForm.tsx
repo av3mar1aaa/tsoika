@@ -11,6 +11,7 @@ type Props = {
     name: string;
     description: string | null;
     image_path: string;
+    show_order_button: boolean;
   };
 };
 
@@ -18,6 +19,9 @@ export default function ProductForm({ mode, initial }: Props) {
   const router = useRouter();
   const [name, setName] = useState(initial?.name ?? "");
   const [description, setDescription] = useState(initial?.description ?? "");
+  const [showOrderButton, setShowOrderButton] = useState(
+    initial?.show_order_button ?? false,
+  );
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(
     initial?.image_path ?? null,
@@ -44,6 +48,7 @@ export default function ProductForm({ mode, initial }: Props) {
     const form = new FormData();
     form.set("name", name);
     form.set("description", description);
+    form.set("show_order_button", showOrderButton ? "1" : "0");
     if (file) form.set("image", file);
 
     setLoading(true);
@@ -126,6 +131,18 @@ export default function ProductForm({ mode, initial }: Props) {
               rows={4}
               className="w-full rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 outline-none focus:border-rose-400"
             />
+          </label>
+
+          <label className="flex cursor-pointer items-center gap-2 select-none">
+            <input
+              type="checkbox"
+              checked={showOrderButton}
+              onChange={(e) => setShowOrderButton(e.target.checked)}
+              className="h-4 w-4 accent-rose-400"
+            />
+            <span className="text-sm text-rose-800">
+              Показывать кнопку «Заказать»
+            </span>
           </label>
 
           {error && (

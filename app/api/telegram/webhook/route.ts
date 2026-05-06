@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextResponse, after } from "next/server";
 import crypto from "node:crypto";
 import sharp from "sharp";
 import {
@@ -52,11 +52,14 @@ export async function POST(request: Request) {
   }
 
   if (update.callback_query) {
-    try {
-      await handleCallback(update.callback_query);
-    } catch (e) {
-      console.error("[telegram] callback handler failed:", e);
-    }
+    const cb = update.callback_query;
+    after(async () => {
+      try {
+        await handleCallback(cb);
+      } catch (e) {
+        console.error("[telegram] callback handler failed:", e);
+      }
+    });
     return NextResponse.json({ ok: true });
   }
 
@@ -69,13 +72,15 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: true });
   }
 
-  try {
-    await handleMessage(message);
-  } catch (e) {
-    const err = e instanceof Error ? e.message : "Ошибка";
-    console.error("[telegram] handler failed:", err, e);
-    await sendMessage(message.chat.id, `❌ Ошибка: ${err}`);
-  }
+  after(async () => {
+    try {
+      await handleMessage(message);
+    } catch (e) {
+      const err = e instanceof Error ? e.message : "Ошибка";
+      console.error("[telegram] handler failed:", err, e);
+      await sendMessage(message.chat.id, `❌ Ошибка: ${err}`);
+    }
+  });
 
   return NextResponse.json({ ok: true });
 }
@@ -151,13 +156,14 @@ async function handleMessage(message: TgMessage): Promise<void> {
   if (!product) {
     const initialName =
       parsed?.name && parsed.name.length > 0 ? parsed.name : "Без названия";
-    product = await createProductFromTelegram({
+    const result = await createProductFromTelegram({
       name: initialName,
       description: null,
       image_path: publicUrl,
       tg_media_group_id: groupId,
     });
-    if (parsed?.recipe) {
+    product = result.product;
+    if (result.created && parsed?.recipe) {
       await createRecipe({
         product_id: product.id,
         title: "Рецепт",
@@ -165,18 +171,20 @@ async function handleMessage(message: TgMessage): Promise<void> {
         instructions: parsed.recipe,
       });
     }
-    await sendMessage(
-      message.chat.id,
-      `Добавить под «${initialName}» кнопку «Заказать»?`,
-      {
-        inline_keyboard: [
-          [
-            { text: "✅ Да", callback_data: `order:1:${product.id}` },
-            { text: "🚫 Нет", callback_data: `order:0:${product.id}` },
+    if (result.created) {
+      await sendMessage(
+        message.chat.id,
+        `Добавить под «${initialName}» кнопку «Заказать»?`,
+        {
+          inline_keyboard: [
+            [
+              { text: "✅ Да", callback_data: `order:1:${product.id}` },
+              { text: "🚫 Нет", callback_data: `order:0:${product.id}` },
+            ],
           ],
-        ],
-      },
-    );
+        },
+      );
+    }
   } else if (parsed) {
     await updateProduct(product.id, {
       name: parsed.name || product.name,

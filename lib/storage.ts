@@ -3,6 +3,8 @@ import {
   PutObjectCommand,
   DeleteObjectCommand,
 } from "@aws-sdk/client-s3";
+import { Upload } from "@aws-sdk/lib-storage";
+import type { Readable } from "node:stream";
 
 const ENDPOINT = "https://storage.yandexcloud.net";
 const REGION = "ru-central1";
@@ -48,6 +50,28 @@ export async function putObject(
       CacheControl: "public, max-age=31536000, immutable",
     }),
   );
+  return publicUrl(key);
+}
+
+export async function uploadStream(
+  key: string,
+  body: Readable | ReadableStream,
+  contentType: string,
+): Promise<string> {
+  const client = getClient();
+  const upload = new Upload({
+    client,
+    params: {
+      Bucket: getBucket(),
+      Key: key,
+      Body: body,
+      ContentType: contentType,
+      CacheControl: "public, max-age=31536000, immutable",
+    },
+    queueSize: 4,
+    partSize: 5 * 1024 * 1024,
+  });
+  await upload.done();
   return publicUrl(key);
 }
 

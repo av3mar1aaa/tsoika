@@ -15,6 +15,23 @@ const db = createClient({ url, authToken });
 
 let schemaReady: Promise<void> | null = null;
 
+async function addColumnIfMissing(
+  table: string,
+  column: string,
+  alterSql: string,
+): Promise<void> {
+  const info = await db.execute({
+    sql: `PRAGMA table_info(${table})`,
+    args: [],
+  });
+  const exists = info.rows.some(
+    (r) => String((r as Record<string, unknown>).name) === column,
+  );
+  if (!exists) {
+    await db.execute(alterSql);
+  }
+}
+
 async function migrate(): Promise<void> {
   await db.executeMultiple(`
     CREATE TABLE IF NOT EXISTS products (
@@ -48,21 +65,16 @@ async function migrate(): Promise<void> {
     CREATE INDEX IF NOT EXISTS idx_media_product ON product_media(product_id, sort_order);
   `);
 
-  try {
-    await db.execute(
-      "ALTER TABLE products ADD COLUMN tg_media_group_id TEXT",
-    );
-  } catch {
-    /* column already exists */
-  }
-
-  try {
-    await db.execute(
-      "ALTER TABLE products ADD COLUMN show_order_button INTEGER NOT NULL DEFAULT 0",
-    );
-  } catch {
-    /* column already exists */
-  }
+  await addColumnIfMissing(
+    "products",
+    "tg_media_group_id",
+    "ALTER TABLE products ADD COLUMN tg_media_group_id TEXT",
+  );
+  await addColumnIfMissing(
+    "products",
+    "show_order_button",
+    "ALTER TABLE products ADD COLUMN show_order_button INTEGER NOT NULL DEFAULT 0",
+  );
 
   await db.execute(
     "CREATE UNIQUE INDEX IF NOT EXISTS idx_products_tg_group ON products(tg_media_group_id) WHERE tg_media_group_id IS NOT NULL",

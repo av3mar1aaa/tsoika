@@ -50,3 +50,34 @@ export const SESSION_CONFIG = {
   cookieName: SESSION_COOKIE,
   maxAge: SESSION_MAX_AGE,
 } as const;
+
+const FAIL_WINDOW_MS = 10 * 60 * 1000;
+const MAX_FAILS_IN_WINDOW = 5;
+
+const loginAttempts = new Map<
+  string,
+  { failed: number; firstFailAt: number }
+>();
+
+export function isLoginRateLimited(ip: string): boolean {
+  const e = loginAttempts.get(ip);
+  if (!e) return false;
+  if (Date.now() - e.firstFailAt > FAIL_WINDOW_MS) {
+    loginAttempts.delete(ip);
+    return false;
+  }
+  return e.failed >= MAX_FAILS_IN_WINDOW;
+}
+
+export function recordLoginFailure(ip: string): void {
+  const e = loginAttempts.get(ip);
+  if (!e || Date.now() - e.firstFailAt > FAIL_WINDOW_MS) {
+    loginAttempts.set(ip, { failed: 1, firstFailAt: Date.now() });
+  } else {
+    e.failed += 1;
+  }
+}
+
+export function recordLoginSuccess(ip: string): void {
+  loginAttempts.delete(ip);
+}

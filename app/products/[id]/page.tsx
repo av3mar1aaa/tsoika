@@ -1,9 +1,45 @@
 import Image from "next/image";
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getProduct } from "@/lib/products";
 import { listRecipesByProduct } from "@/lib/recipes";
 import { listMediaByProduct } from "@/lib/media";
 import OrderButton from "@/components/OrderButton";
+import ProductGallery from "@/components/ProductGallery";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}): Promise<Metadata> {
+  const { id } = await params;
+  const productId = Number(id);
+  if (!Number.isInteger(productId)) return {};
+  const product = await getProduct(productId);
+  if (!product) return {};
+
+  const description =
+    product.description?.trim().slice(0, 160) ||
+    `Авторский десерт «${product.name}» — Tsoika, кулинарное волшебство.`;
+  const title = `${product.name} — Tsoika`;
+
+  return {
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      type: "website",
+      images: [{ url: product.image_path }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: [product.image_path],
+    },
+  };
+}
 
 export const dynamic = "force-dynamic";
 
@@ -59,36 +95,7 @@ export default async function ProductPage({
           <h2 className="mb-6 font-display text-2xl font-semibold text-rose-800">
             Галерея
           </h2>
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
-            {media.map((m) =>
-              m.kind === "image" ? (
-                <a
-                  key={m.id}
-                  href={m.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="relative block aspect-square overflow-hidden rounded-xl border border-rose-200 bg-rose-100"
-                >
-                  <Image
-                    src={m.url}
-                    alt=""
-                    fill
-                    sizes="(max-width: 640px) 50vw, 33vw"
-                    className="object-cover transition-transform hover:scale-105"
-                  />
-                </a>
-              ) : (
-                <video
-                  key={m.id}
-                  src={m.url}
-                  controls
-                  playsInline
-                  preload="metadata"
-                  className="aspect-square w-full overflow-hidden rounded-xl border border-rose-200 bg-black object-cover"
-                />
-              ),
-            )}
-          </div>
+          <ProductGallery media={media} />
         </section>
       )}
 

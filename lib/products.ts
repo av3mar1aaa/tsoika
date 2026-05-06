@@ -31,12 +31,24 @@ export async function setProductOrderButton(
   });
 }
 
-export async function listProducts(): Promise<Product[]> {
+export async function listProducts(input?: {
+  limit?: number;
+  offset?: number;
+}): Promise<Product[]> {
   await ensureSchema();
-  const res = await db.execute(
-    "SELECT * FROM products ORDER BY created_at DESC",
-  );
+  const limit = input?.limit ?? 1000;
+  const offset = input?.offset ?? 0;
+  const res = await db.execute({
+    sql: "SELECT * FROM products ORDER BY created_at DESC LIMIT ? OFFSET ?",
+    args: [limit, offset],
+  });
   return res.rows.map((r) => rowToProduct(r as Record<string, unknown>));
+}
+
+export async function countProducts(): Promise<number> {
+  await ensureSchema();
+  const res = await db.execute("SELECT COUNT(*) AS c FROM products");
+  return Number((res.rows[0] as Record<string, unknown>).c ?? 0);
 }
 
 export async function getProduct(id: number): Promise<Product | null> {
@@ -66,20 +78,33 @@ export async function createProductFromTelegram(input: {
   description: string | null;
   image_path: string;
   tg_media_group_id: string | null;
-}): Promise<Product> {
+}): Promise<{ product: Product; created: boolean }> {
   await ensureSchema();
   const now = Date.now();
-  const res = await db.execute({
-    sql: "INSERT INTO products (name, description, image_path, created_at, tg_media_group_id) VALUES (?, ?, ?, ?, ?) RETURNING *",
-    args: [
-      input.name,
-      input.description,
-      input.image_path,
-      now,
-      input.tg_media_group_id,
-    ],
-  });
-  return rowToProduct(res.rows[0] as Record<string, unknown>);
+  try {
+    const res = await db.execute({
+      sql: "INSERT INTO products (name, description, image_path, created_at, tg_media_group_id) VALUES (?, ?, ?, ?, ?) RETURNING *",
+      args: [
+        input.name,
+        input.description,
+        input.image_path,
+        now,
+        input.tg_media_group_id,
+      ],
+    });
+    return {
+      product: rowToProduct(res.rows[0] as Record<string, unknown>),
+      created: true,
+    };
+  } catch (e) {
+    if (input.tg_media_group_id) {
+      const existing = await getProductByTgMediaGroupId(
+        input.tg_media_group_id,
+      );
+      if (existing) return { product: existing, created: false };
+    }
+    throw e;
+  }
 }
 
 

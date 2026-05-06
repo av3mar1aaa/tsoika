@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import {
   deleteProduct,
   getProduct,
+  setProductOrderButton,
   updateProduct,
 } from "@/lib/products";
 import { listMediaByProduct } from "@/lib/media";
@@ -54,6 +55,11 @@ export async function PUT(
         : null,
     image_path: newImageUrl,
   });
+
+  const showOrderRaw = form.get("show_order_button");
+  if (typeof showOrderRaw === "string") {
+    await setProductOrderButton(id, showOrderRaw === "1");
+  }
 
   if (newImageUrl && existing.image_path !== newImageUrl) {
     await deleteUpload(existing.image_path);

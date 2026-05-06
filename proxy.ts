@@ -10,6 +10,31 @@ export async function proxy(request: NextRequest) {
   }
 
   if (pathname.startsWith("/admin") || pathname.startsWith("/api/admin")) {
+    if (
+      pathname.startsWith("/api/admin") &&
+      request.method !== "GET" &&
+      request.method !== "HEAD"
+    ) {
+      const origin = request.headers.get("origin");
+      const host = request.headers.get("host");
+      if (origin) {
+        try {
+          const originHost = new URL(origin).host;
+          if (host && originHost !== host) {
+            return NextResponse.json(
+              { error: "Cross-origin запросы запрещены" },
+              { status: 403 },
+            );
+          }
+        } catch {
+          return NextResponse.json(
+            { error: "Cross-origin запросы запрещены" },
+            { status: 403 },
+          );
+        }
+      }
+    }
+
     const token = request.cookies.get(SESSION_CONFIG.cookieName)?.value;
     const session = await verifySession(token);
 
