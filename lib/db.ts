@@ -90,6 +90,21 @@ async function migrate(): Promise<void> {
     "category",
     "ALTER TABLE products ADD COLUMN category TEXT",
   );
+  await addColumnIfMissing(
+    "products",
+    "image_zoom",
+    "ALTER TABLE products ADD COLUMN image_zoom REAL NOT NULL DEFAULT 1",
+  );
+  await addColumnIfMissing(
+    "products",
+    "image_focus_x",
+    "ALTER TABLE products ADD COLUMN image_focus_x INTEGER NOT NULL DEFAULT 50",
+  );
+  await addColumnIfMissing(
+    "products",
+    "image_focus_y",
+    "ALTER TABLE products ADD COLUMN image_focus_y INTEGER NOT NULL DEFAULT 50",
+  );
   await db.execute(
     "CREATE INDEX IF NOT EXISTS idx_products_category ON products(category)",
   );

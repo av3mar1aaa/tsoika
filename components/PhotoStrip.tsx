@@ -53,7 +53,11 @@ export default function PhotoStrip({ products }: { products: Product[] }) {
               alt={p.name}
               fill
               sizes="(max-width: 640px) 50vw, 280px"
-              className="object-cover transition-transform duration-500 group-hover:scale-[1.04]"
+              className="object-cover transition-transform duration-500"
+              style={{
+                objectPosition: `${p.image_focus_x}% ${p.image_focus_y}%`,
+                transform: `scale(${p.image_zoom})`,
+              }}
             />
             <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 to-transparent p-3">
               <span className="block truncate text-sm font-medium text-white drop-shadow-sm">

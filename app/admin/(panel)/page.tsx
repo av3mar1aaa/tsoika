@@ -48,6 +48,10 @@ export default async function AdminDashboard() {
                         fill
                         sizes="56px"
                         className="object-cover"
+                        style={{
+                          objectPosition: `${p.image_focus_x}% ${p.image_focus_y}%`,
+                          transform: `scale(${p.image_zoom})`,
+                        }}
                       />
                     </div>
                   </td>

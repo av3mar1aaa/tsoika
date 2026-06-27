@@ -28,6 +28,7 @@ import {
   getLastProductForChat,
   setLastProductForChat,
 } from "@/lib/chat-state";
+import { inferCategoryFromText } from "@/lib/categories";
 
 export const runtime = "nodejs";
 export const maxDuration = 300;
@@ -168,6 +169,7 @@ async function handleMessage(message: TgMessage): Promise<void> {
       image_width: imageWidth,
       image_height: imageHeight,
       tg_media_group_id: groupId,
+      category: inferCategoryFromText(initialName, parsed?.recipe),
     });
     product = result.product;
     if (result.created && parsed?.recipe) {

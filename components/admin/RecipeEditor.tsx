@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import type { Recipe } from "@/lib/recipes";
+import RichText from "@/components/RichText";
 import RichTextEditor from "./RichTextEditor";
 
 type Props = {
@@ -88,13 +89,13 @@ function RecipeItem({ recipe }: { recipe: Recipe }) {
             <div className="text-xs font-semibold uppercase text-rose-600">
               Ингредиенты
             </div>
-            <p className="whitespace-pre-line">{recipe.ingredients}</p>
+            <RichText html={recipe.ingredients} />
           </div>
           <div>
             <div className="text-xs font-semibold uppercase text-rose-600">
               Приготовление
             </div>
-            <p className="whitespace-pre-line">{recipe.instructions}</p>
+            <RichText html={recipe.instructions} />
           </div>
         </div>
       </div>

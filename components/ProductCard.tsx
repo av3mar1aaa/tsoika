@@ -13,7 +13,11 @@ export default function ProductCard({ product }: { product: Product }) {
             alt={product.name}
             fill
             sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-            className="object-cover transition-transform duration-500 group-hover:scale-105"
+            className="object-cover transition-transform duration-500"
+            style={{
+              objectPosition: `${product.image_focus_x}% ${product.image_focus_y}%`,
+              transform: `scale(${product.image_zoom})`,
+            }}
           />
         </div>
         <div className="px-4 py-4">

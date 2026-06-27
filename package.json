@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "set-password": "tsx scripts/set-password.ts",
+    "backfill-categories": "node --env-file=.env.local --import tsx scripts/backfill-categories.ts",
     "seed": "node --env-file=.env.local --import tsx scripts/seed.ts"
   },
   "dependencies": {

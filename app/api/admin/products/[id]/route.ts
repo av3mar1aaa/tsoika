@@ -6,7 +6,7 @@ import {
   setProductOrderButton,
   updateProduct,
 } from "@/lib/products";
-import { isValidCategory } from "@/lib/categories";
+import { inferCategoryFromText, isValidCategory } from "@/lib/categories";
 import { listMediaByProduct } from "@/lib/media";
 import { deleteUpload, uploadImage } from "@/lib/upload";
 
@@ -49,15 +49,19 @@ export async function PUT(
     }
   }
 
+  const normalizedName = name.trim();
+  const normalizedDescription =
+    typeof description === "string" && description.trim()
+      ? description.trim()
+      : null;
+
   await updateProduct(id, {
-    name: name.trim(),
-    description:
-      typeof description === "string" && description.trim()
-        ? description.trim()
-        : null,
+    name: normalizedName,
+    description: normalizedDescription,
     image_path: newImage?.url,
     image_width: newImage?.width,
     image_height: newImage?.height,
+    ...parseImageFit(form),
   });
 
   const showOrderRaw = form.get("show_order_button");
@@ -70,7 +74,9 @@ export async function PUT(
     const trimmed = categoryRaw.trim();
     await setProductCategory(
       id,
-      trimmed === "" || !isValidCategory(trimmed) ? null : trimmed,
+      isValidCategory(trimmed)
+        ? trimmed
+        : inferCategoryFromText(normalizedName, normalizedDescription),
     );
   }
 
@@ -79,6 +85,29 @@ export async function PUT(
   }
 
   return NextResponse.json({ ok: true });
+}
+
+function parseImageFit(form: FormData): {
+  image_zoom: number;
+  image_focus_x: number;
+  image_focus_y: number;
+} {
+  return {
+    image_zoom: clampNumber(form.get("image_zoom"), 1, 2, 1),
+    image_focus_x: clampNumber(form.get("image_focus_x"), 0, 100, 50),
+    image_focus_y: clampNumber(form.get("image_focus_y"), 0, 100, 50),
+  };
+}
+
+function clampNumber(
+  value: FormDataEntryValue | null,
+  min: number,
+  max: number,
+  fallback: number,
+): number {
+  const n = typeof value === "string" ? Number(value) : Number.NaN;
+  if (!Number.isFinite(n)) return fallback;
+  return Math.min(max, Math.max(min, n));
 }
 
 export async function DELETE(

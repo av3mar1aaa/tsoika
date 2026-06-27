@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { CATEGORIES } from "@/lib/categories";
+import { CATEGORY_GROUPS } from "@/lib/categories";
 
 type Props = {
   mode: "create" | "edit";
@@ -12,6 +12,9 @@ type Props = {
     name: string;
     description: string | null;
     image_path: string;
+    image_zoom: number;
+    image_focus_x: number;
+    image_focus_y: number;
     show_order_button: boolean;
     category: string | null;
   };
@@ -25,6 +28,9 @@ export default function ProductForm({ mode, initial }: Props) {
     initial?.show_order_button ?? false,
   );
   const [category, setCategory] = useState<string>(initial?.category ?? "");
+  const [imageZoom, setImageZoom] = useState(initial?.image_zoom ?? 1);
+  const [imageFocusX, setImageFocusX] = useState(initial?.image_focus_x ?? 50);
+  const [imageFocusY, setImageFocusY] = useState(initial?.image_focus_y ?? 50);
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(
     initial?.image_path ?? null,
@@ -53,6 +59,9 @@ export default function ProductForm({ mode, initial }: Props) {
     form.set("description", description);
     form.set("show_order_button", showOrderButton ? "1" : "0");
     form.set("category", category);
+    form.set("image_zoom", String(imageZoom));
+    form.set("image_focus_x", String(imageFocusX));
+    form.set("image_focus_y", String(imageFocusY));
     if (file) form.set("image", file);
 
     setLoading(true);
@@ -98,6 +107,10 @@ export default function ProductForm({ mode, initial }: Props) {
                 sizes="220px"
                 className="object-cover"
                 unoptimized={preview.startsWith("blob:")}
+                style={{
+                  objectPosition: `${imageFocusX}% ${imageFocusY}%`,
+                  transform: `scale(${imageZoom})`,
+                }}
               />
             ) : (
               <div className="flex h-full items-center justify-center text-sm text-rose-800/60">
@@ -111,6 +124,48 @@ export default function ProductForm({ mode, initial }: Props) {
             onChange={onFileChange}
             className="block w-full text-xs text-rose-800 file:mr-2 file:rounded-md file:border-0 file:bg-rose-100 file:px-3 file:py-1.5 file:text-xs file:text-rose-800 hover:file:bg-rose-200"
           />
+          {preview && (
+            <div className="mt-4 space-y-3 rounded-xl border border-rose-200 bg-rose-50 p-3">
+              <ImageFitSlider
+                label="Масштаб"
+                value={imageZoom}
+                min={1}
+                max={2}
+                step={0.05}
+                display={`${Math.round(imageZoom * 100)}%`}
+                onChange={setImageZoom}
+              />
+              <ImageFitSlider
+                label="По горизонтали"
+                value={imageFocusX}
+                min={0}
+                max={100}
+                step={1}
+                display={`${imageFocusX}%`}
+                onChange={setImageFocusX}
+              />
+              <ImageFitSlider
+                label="По вертикали"
+                value={imageFocusY}
+                min={0}
+                max={100}
+                step={1}
+                display={`${imageFocusY}%`}
+                onChange={setImageFocusY}
+              />
+              <button
+                type="button"
+                onClick={() => {
+                  setImageZoom(1);
+                  setImageFocusX(50);
+                  setImageFocusY(50);
+                }}
+                className="w-full rounded-lg border border-rose-200 bg-white px-3 py-1.5 text-xs text-rose-800 hover:bg-rose-100"
+              >
+                Сбросить кадрирование
+              </button>
+            </div>
+          )}
         </div>
 
         <div className="space-y-4">
@@ -139,19 +194,30 @@ export default function ProductForm({ mode, initial }: Props) {
 
           <label className="block">
             <span className="mb-1 block text-sm text-rose-800">
-              Категория
+              Тег раздела
             </span>
             <select
               value={category}
               onChange={(e) => setCategory(e.target.value)}
               className="w-full rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 outline-none focus:border-rose-400"
             >
-              <option value="">Без категории</option>
-              {CATEGORIES.map((c) => (
-                <option key={c} value={c}>
-                  {c}
-                </option>
-              ))}
+              <option value="">Определить автоматически</option>
+              {CATEGORY_GROUPS.map((group) =>
+                "children" in group ? (
+                  <optgroup key={group.name} label={group.name}>
+                    <option value={group.name}>{group.name}</option>
+                    {group.children.map((child) => (
+                      <option key={child} value={child}>
+                        {child}
+                      </option>
+                    ))}
+                  </optgroup>
+                ) : (
+                  <option key={group.name} value={group.name}>
+                    {group.name}
+                  </option>
+                ),
+              )}
             </select>
           </label>
 
@@ -187,5 +253,41 @@ export default function ProductForm({ mode, initial }: Props) {
         </div>
       </div>
     </form>
+  );
+}
+
+function ImageFitSlider({
+  label,
+  value,
+  min,
+  max,
+  step,
+  display,
+  onChange,
+}: {
+  label: string;
+  value: number;
+  min: number;
+  max: number;
+  step: number;
+  display: string;
+  onChange: (value: number) => void;
+}) {
+  return (
+    <label className="block">
+      <span className="mb-1 flex justify-between text-xs text-rose-800">
+        <span>{label}</span>
+        <span>{display}</span>
+      </span>
+      <input
+        type="range"
+        min={min}
+        max={max}
+        step={step}
+        value={value}
+        onChange={(e) => onChange(Number(e.target.value))}
+        className="w-full accent-rose-400"
+      />
+    </label>
   );
 }
