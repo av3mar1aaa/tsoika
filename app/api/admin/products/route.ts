@@ -6,6 +6,7 @@ import {
 } from "@/lib/products";
 import { uploadImage } from "@/lib/upload";
 import { inferCategoryFromText, isValidCategory } from "@/lib/categories";
+import { revalidateProducts } from "@/lib/cache";
 
 export async function POST(request: Request) {
   const form = await request.formData();
@@ -59,6 +60,7 @@ export async function POST(request: Request) {
     if (category) {
       await setProductCategory(product.id, category);
     }
+    revalidateProducts(product.id);
     return NextResponse.json({ product });
   } catch (e) {
     const message = e instanceof Error ? e.message : "Ошибка загрузки";

@@ -4,7 +4,7 @@ export default function Hero() {
   return (
     <section className="relative h-[78vh] min-h-[480px] w-full overflow-hidden">
       <Image
-        src="/hero.png"
+        src="/hero.webp"
         alt="Десерты Tsoika"
         fill
         priority

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { deleteMedia, getMedia } from "@/lib/media";
 import { deleteUpload } from "@/lib/upload";
+import { revalidateProducts } from "@/lib/cache";
 
 export async function DELETE(
   _request: Request,
@@ -17,5 +18,6 @@ export async function DELETE(
   }
   await deleteMedia(id);
   await deleteUpload(existing.url);
+  revalidateProducts(existing.product_id);
   return NextResponse.json({ ok: true });
 }

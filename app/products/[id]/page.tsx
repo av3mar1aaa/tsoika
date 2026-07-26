@@ -1,9 +1,12 @@
 import Image from "next/image";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { getProduct } from "@/lib/products";
-import { listRecipesByProduct } from "@/lib/recipes";
-import { listMediaByProduct } from "@/lib/media";
+import {
+  listProductsCached,
+  getProductCached,
+  listRecipesByProductCached,
+  listMediaByProductCached,
+} from "@/lib/cache";
 import OrderButton from "@/components/OrderButton";
 import ProductGallery from "@/components/ProductGallery";
 import RichText from "@/components/RichText";
@@ -16,7 +19,7 @@ export async function generateMetadata({
   const { id } = await params;
   const productId = Number(id);
   if (!Number.isInteger(productId)) return {};
-  const product = await getProduct(productId);
+  const product = await getProductCached(productId);
   if (!product) return {};
 
   const description =
@@ -42,7 +45,20 @@ export async function generateMetadata({
   };
 }
 
-export const dynamic = "force-dynamic";
+// Страницы товаров отдаются из кеша CDN, сбрасывается по тегу при правках.
+export const revalidate = 3600;
+
+/**
+ * Без generateStaticParams маршрут с `[id]` считается динамическим и кеш ISR
+ * к нему не применяется. Собираем заранее только свежие товары — на них
+ * приходят ссылки из Telegram и поиска. Остальные 400+ страниц рендерятся при
+ * первом обращении и после этого тоже лежат в кеше (dynamicParams по умолчанию
+ * включён), поэтому сборка не разрастается.
+ */
+export async function generateStaticParams() {
+  const products = await listProductsCached({ limit: 60 });
+  return products.map((p) => ({ id: String(p.id) }));
+}
 
 export default async function ProductPage({
   params,
@@ -53,12 +69,12 @@ export default async function ProductPage({
   const productId = Number(id);
   if (!Number.isInteger(productId)) notFound();
 
-  const product = await getProduct(productId);
+  const product = await getProductCached(productId);
   if (!product) notFound();
 
   const [recipes, media] = await Promise.all([
-    listRecipesByProduct(productId),
-    listMediaByProduct(productId),
+    listRecipesByProductCached(productId),
+    listMediaByProductCached(productId),
   ]);
 
   return (

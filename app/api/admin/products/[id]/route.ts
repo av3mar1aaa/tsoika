@@ -9,6 +9,7 @@ import {
 import { inferCategoryFromText, isValidCategory } from "@/lib/categories";
 import { listMediaByProduct } from "@/lib/media";
 import { deleteUpload, uploadImage } from "@/lib/upload";
+import { revalidateProducts } from "@/lib/cache";
 
 function parseId(raw: string): number | null {
   const n = Number(raw);
@@ -84,6 +85,7 @@ export async function PUT(
     await deleteUpload(existing.image_path);
   }
 
+  revalidateProducts(id);
   return NextResponse.json({ ok: true });
 }
 
@@ -130,5 +132,6 @@ export async function DELETE(
     await deleteUpload(m.url);
   }
 
+  revalidateProducts(id);
   return NextResponse.json({ ok: true });
 }

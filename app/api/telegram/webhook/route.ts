@@ -29,6 +29,7 @@ import {
   setLastProductForChat,
 } from "@/lib/chat-state";
 import { inferCategoryFromText } from "@/lib/categories";
+import { revalidateProducts } from "@/lib/cache";
 
 export const runtime = "nodejs";
 export const maxDuration = 300;
@@ -106,6 +107,7 @@ async function handleCallback(cb: TgCallbackQuery): Promise<void> {
     return;
   }
   await setProductOrderButton(productId, show);
+  revalidateProducts(productId);
   await answerCallbackQuery(
     cb.id,
     show ? "Кнопка добавлена" : "Без кнопки",
@@ -215,6 +217,7 @@ async function handleMessage(message: TgMessage): Promise<void> {
     url: publicUrl,
   });
 
+  revalidateProducts(product.id);
   await setLastProductForChat(message.chat.id, product.id);
 }
 
@@ -231,6 +234,7 @@ async function handleTextContinuation(message: TgMessage): Promise<void> {
     return;
   }
   await appendToFirstRecipeOfProduct(lastId, text);
+  revalidateProducts(lastId);
   await sendMessage(message.chat.id, "📝 Дополнено к последнему десерту");
 }
 

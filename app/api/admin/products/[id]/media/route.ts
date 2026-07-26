@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getProduct } from "@/lib/products";
 import { createMedia } from "@/lib/media";
 import { uploadImage, uploadVideo } from "@/lib/upload";
+import { revalidateProducts } from "@/lib/cache";
 
 export const runtime = "nodejs";
 export const maxDuration = 300;
@@ -43,6 +44,7 @@ export async function POST(
     }
 
     const media = await createMedia({ product_id: productId, kind, url });
+    revalidateProducts(productId);
     return NextResponse.json({ media });
   } catch (e) {
     const message = e instanceof Error ? e.message : "Ошибка загрузки";

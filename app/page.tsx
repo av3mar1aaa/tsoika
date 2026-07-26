@@ -1,12 +1,14 @@
 import Hero from "@/components/Hero";
 import Welcome from "@/components/Welcome";
 import PhotoStrip from "@/components/PhotoStrip";
-import { listProducts } from "@/lib/products";
+import { listProductsCached } from "@/lib/cache";
 
-export const dynamic = "force-dynamic";
+// Страница отдаётся из кеша CDN и пересобирается при изменении каталога
+// (см. revalidateProducts). Час — предохранитель на случай пропущенного сброса.
+export const revalidate = 3600;
 
 export default async function Home() {
-  const products = await listProducts({ limit: 30 });
+  const products = await listProductsCached({ limit: 30 });
 
   return (
     <>

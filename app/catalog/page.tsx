@@ -1,10 +1,11 @@
 import Link from "next/link";
-import { countProducts, listProducts } from "@/lib/products";
+import { countProductsCached, listProductsCached } from "@/lib/cache";
 import { isValidCategory } from "@/lib/categories";
 import ProductGrid from "@/components/ProductGrid";
 import CategoryTabs from "@/components/CategoryTabs";
 
-export const dynamic = "force-dynamic";
+// Страница читает searchParams (страница, категория), поэтому рендерится на
+// каждый запрос. Кешируются сами выборки — обращения к базе не происходит.
 
 const PAGE_SIZE = 24;
 
@@ -19,8 +20,8 @@ export default async function CatalogPage({
     sp.category && isValidCategory(sp.category) ? sp.category : null;
 
   const [total, products] = await Promise.all([
-    countProducts({ category: categoryParam }),
-    listProducts({
+    countProductsCached({ category: categoryParam }),
+    listProductsCached({
       limit: PAGE_SIZE,
       offset: (pageNum - 1) * PAGE_SIZE,
       category: categoryParam,

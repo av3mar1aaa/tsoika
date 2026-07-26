@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { deleteRecipe, getRecipe, updateRecipe } from "@/lib/recipes";
+import { revalidateProducts } from "@/lib/cache";
 
 function parseId(raw: string): number | null {
   const n = Number(raw);
@@ -13,7 +14,8 @@ export async function PUT(
   const { id: rawId } = await params;
   const id = parseId(rawId);
   if (!id) return NextResponse.json({ error: "Bad id" }, { status: 400 });
-  if (!(await getRecipe(id)))
+  const existing = await getRecipe(id);
+  if (!existing)
     return NextResponse.json({ error: "Не найдено" }, { status: 404 });
 
   let body: { title?: string; ingredients?: string; instructions?: string };
@@ -42,6 +44,7 @@ export async function PUT(
     ingredients: typeof ingredients === "string" ? ingredients.trim() : "",
     instructions: instructions.trim(),
   });
+  revalidateProducts(existing.product_id);
   return NextResponse.json({ ok: true });
 }
 
@@ -53,9 +56,11 @@ export async function DELETE(
   const id = parseId(rawId);
   if (!id) return NextResponse.json({ error: "Bad id" }, { status: 400 });
 
-  if (!(await getRecipe(id)))
+  const existing = await getRecipe(id);
+  if (!existing)
     return NextResponse.json({ error: "Не найдено" }, { status: 404 });
 
   await deleteRecipe(id);
+  revalidateProducts(existing.product_id);
   return NextResponse.json({ ok: true });
 }

@@ -1,5 +1,5 @@
 import type { MetadataRoute } from "next";
-import { listProducts } from "@/lib/products";
+import { listProductsCached } from "@/lib/cache";
 import { SITE_URL } from "@/lib/site";
 
 // Товары добавляются через Telegram-бота без пересборки, поэтому карта сайта
@@ -7,7 +7,7 @@ import { SITE_URL } from "@/lib/site";
 export const dynamic = "force-dynamic";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const products = await listProducts();
+  const products = await listProductsCached();
   const now = new Date();
 
   const staticEntries: MetadataRoute.Sitemap = [

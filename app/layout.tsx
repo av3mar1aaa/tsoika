@@ -30,13 +30,13 @@ export const metadata: Metadata = {
     title: "Tsoika — кулинарное волшебство",
     description:
       "Авторские торты, макарон, эклеры и пирожные на заказ. Нежные десерты ручной работы.",
-    images: [{ url: "/hero.png" }],
+    images: [{ url: "/og.jpg", width: 1200, height: 630 }],
   },
   twitter: {
     card: "summary_large_image",
     title: "Tsoika — кулинарное волшебство",
     description: "Авторские торты, макарон, эклеры и пирожные на заказ.",
-    images: ["/hero.png"],
+    images: ["/og.jpg"],
   },
 };
 

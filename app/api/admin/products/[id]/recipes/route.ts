@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getProduct } from "@/lib/products";
 import { createRecipe } from "@/lib/recipes";
+import { revalidateProducts } from "@/lib/cache";
 
 export async function POST(
   request: Request,
@@ -43,5 +44,6 @@ export async function POST(
     instructions: instructions.trim(),
   });
 
+  revalidateProducts(productId);
   return NextResponse.json({ recipe });
 }
