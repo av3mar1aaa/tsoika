@@ -34,16 +34,41 @@ npm run dev
 - `components/` — React-компоненты (публичные и `admin/`)
 - `proxy.ts` — защита `/admin/*` и `/api/admin/*` (аналог middleware в Next 16)
 - `data/app.db` — SQLite база (создаётся автоматически, в git не попадает)
-- `public/uploads/` — загруженные фото (в git не попадают)
-- `scripts/` — утилиты: `set-password.ts`, `seed.ts`
+- `deploy/` — systemd-юниты, nginx, скрипт деплоя и [инструкция по переезду](deploy/README.md)
+- `scripts/` — утилиты (см. ниже)
+
+## Хранение данных
+
+- **База** — SQLite-файл. Путь берётся из `DATABASE_PATH`, по умолчанию `data/app.db`.
+  Если задан `TURSO_DATABASE_URL`, приложение работает с удалённой базой Turso.
+- **Фото и видео** — Yandex Object Storage. В базе хранятся только публичные URL.
+  Изображения перед загрузкой прогоняются через sharp: поворот по EXIF,
+  вписывание в 1600×1600, WebP q82. Видео заливаются потоком, лимит 100 МБ.
 
 ## Переменные окружения (`.env.local`)
+
+Полный список — в [.env.local.example](.env.local.example). Минимум для локального запуска:
 
 ```
 ADMIN_USERNAME=admin
 ADMIN_PASSWORD_HASH=<bcrypt-хеш>
 SESSION_SECRET=<минимум 16 символов случайной строки>
+YC_ACCESS_KEY_ID=<для загрузки фото>
+YC_SECRET_ACCESS_KEY=
+YC_BUCKET=
 ```
+
+## Скрипты
+
+| Команда | Что делает |
+|---|---|
+| `npm run set-password -- "пароль"` | Генерирует `ADMIN_PASSWORD_HASH` и `SESSION_SECRET` |
+| `npm run seed` | Засеивает примерами |
+| `npm run dump-turso [-- путь] [--force]` | Копирует базу Turso в локальный SQLite-файл со сверкой счётчиков |
+| `npm run audit-media [-- --fix] [--delete-orphans]` | Сверяет ссылки в БД с бакетом: битые ссылки и файлы-сироты |
+| `npm run backfill-image-dims` | Дозаполняет `image_width/height` у товаров |
+| `npm run backfill-categories` | Расставляет категории по названию и рецепту |
+| `npm run backup-db` | Снимок базы + gzip + выгрузка в бакет (запускается по таймеру на сервере) |
 
 ## Продакшен
 
@@ -52,4 +77,5 @@ npm run build
 npm run start
 ```
 
-Для продакшена храните `data/app.db` и `public/uploads/` на персистентном томе (не сбрасывайте при деплое).
+Разворачивание на VPS — [deploy/README.md](deploy/README.md). База должна лежать
+на персистентном диске вне каталога с кодом (`DATABASE_PATH=/var/lib/tsoika/app.db`).

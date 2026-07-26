@@ -1,0 +1,32 @@
+[Unit]
+Description=Tsoika (Next.js)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=tsoika
+WorkingDirectory=/srv/tsoika
+EnvironmentFile=/srv/tsoika/.env.local
+Environment=NODE_ENV=production
+Environment=PORT=3000
+Environment=HOSTNAME=127.0.0.1
+ExecStart=/usr/bin/npm run start
+Restart=always
+RestartSec=3
+
+# База лежит вне каталога с кодом — деплой её не трогает.
+Environment=DATABASE_PATH=/var/lib/tsoika/app.db
+ReadWritePaths=/var/lib/tsoika
+
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=true
+
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=tsoika
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,14 @@
+[Unit]
+Description=Tsoika: бэкап базы в Object Storage
+After=network-online.target
+
+[Service]
+Type=oneshot
+User=tsoika
+WorkingDirectory=/srv/tsoika
+EnvironmentFile=/srv/tsoika/.env.local
+Environment=DATABASE_PATH=/var/lib/tsoika/app.db
+ExecStart=/usr/bin/npm run backup-db
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=tsoika-backup

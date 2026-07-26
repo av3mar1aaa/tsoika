@@ -9,6 +9,10 @@
     "lint": "eslint",
     "set-password": "tsx scripts/set-password.ts",
     "backfill-categories": "node --env-file=.env.local --import tsx scripts/backfill-categories.ts",
+    "dump-turso": "node --env-file=.env.local --import tsx scripts/dump-turso.ts",
+    "audit-media": "node --env-file=.env.local --import tsx scripts/audit-media.ts",
+    "backfill-image-dims": "node --env-file=.env.local --import tsx scripts/backfill-image-dims.ts",
+    "backup-db": "node --env-file=.env.local --import tsx scripts/backup-db.ts",
     "seed": "node --env-file=.env.local --import tsx scripts/seed.ts"
   },
   "dependencies": {

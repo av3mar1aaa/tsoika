@@ -1,8 +1,10 @@
 import type { MetadataRoute } from "next";
 import { listProducts } from "@/lib/products";
+import { SITE_URL } from "@/lib/site";
 
-const SITE_URL =
-  process.env.NEXT_PUBLIC_SITE_URL ?? "https://tsoika.netlify.app";
+// Товары добавляются через Telegram-бота без пересборки, поэтому карта сайта
+// строится на каждый запрос — иначе новые страницы в неё не попадают.
+export const dynamic = "force-dynamic";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const products = await listProducts();

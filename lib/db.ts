@@ -2,13 +2,20 @@ import { createClient } from "@libsql/client";
 import fs from "node:fs";
 import path from "node:path";
 
-const url = process.env.TURSO_DATABASE_URL ?? `file:${defaultLocalPath()}`;
-const authToken = process.env.TURSO_AUTH_TOKEN;
+const remoteUrl = process.env.TURSO_DATABASE_URL?.trim();
+const url = remoteUrl ? remoteUrl : `file:${localPath()}`;
+const authToken = remoteUrl ? process.env.TURSO_AUTH_TOKEN : undefined;
 
-function defaultLocalPath(): string {
-  const dir = path.join(process.cwd(), "data");
+// Локальный SQLite-файл. DATABASE_PATH позволяет вынести базу на
+// отдельный том (на VPS — вне каталога с кодом, чтобы деплой её не трогал).
+function localPath(): string {
+  const configured = process.env.DATABASE_PATH?.trim();
+  const file = configured
+    ? path.resolve(configured)
+    : path.join(process.cwd(), "data", "app.db");
+  const dir = path.dirname(file);
   if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-  return path.join(dir, "app.db");
+  return file;
 }
 
 const db = createClient({ url, authToken });
