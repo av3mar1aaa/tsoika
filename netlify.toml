@@ -1,0 +1,11 @@
+# Временно: старый сайт на Netlify работает, пока не переключимся на свой VPS.
+# Удалить вместе с сайтом в Netlify после переезда (deploy/README.md, шаг 9).
+[build]
+  command = "npm run build"
+  publish = ".next"
+
+[build.environment]
+  NODE_VERSION = "22"
+
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
